@@ -14,6 +14,8 @@ public class ServerCentral {
     private static int port = 1234;// j edefinis mon port
 
     public static void main(String[] args) {
+        document.add("le projet editor");
+        document.add("réseaux");
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Serveur démarré sur le port " + port);
             while (true) {// j'attend la connexion du client
@@ -21,9 +23,6 @@ public class ServerCentral {
                 System.out.println("Nouveau client connecté : " + socket.getInetAddress());
                 // chaque fois un client est connecté je crée pour luis on propre thread avec Editeur une classe que je vais créer ulterieurment
                 new Editeur(socket, document).run();
-
-
-
             }
 
         } catch (IOException e) {
