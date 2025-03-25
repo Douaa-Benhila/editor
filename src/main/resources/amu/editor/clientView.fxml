@@ -21,5 +21,10 @@
 </ListView>
 
 <TextField fx:id="textField" promptText="Select a line and  edit here..." onAction="#handleTextFieldUpdate"/>
-<Button fx:id="refreshButton" text="refresh" onAction="#handleRefresh"/>
+    <HBox spacing="10">
+        <Button fx:id="modifyButton" text="Modify Line" onAction="#handleTextFieldUpdate" disable="true"/>
+        <Button fx:id="deleteButton" text="Delete Line" onAction="#handleDeleteLine" disable="true"/>
+    </HBox>
+
+    <Button fx:id="refreshButton" text="refresh" onAction="#handleRefresh"/>
 </VBox>
