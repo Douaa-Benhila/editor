@@ -1,11 +1,13 @@
 package amu.editor;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
-
-import java.io.BufferedReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientController {
 
@@ -17,94 +19,95 @@ public class ClientController {
 
     @FXML
     private MenuItem deleteLineMenuItem;
+
+    private static final String HOST = "localhost";
+    private static final int PORT = 12345;
+
+    private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
 
-    public void setConnection(PrintWriter out, BufferedReader in) {
-        this.out = out;
-        this.in = in;
-    }
-
     @FXML
     public void initialize() {
-        handleRefresh(); // get last version of the document
+        try {
+            socket = new Socket(HOST, PORT);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        } catch (IOException e) {
+            System.err.println("Failed to connect to server in initialize: " + e.getMessage());
+            e.printStackTrace();
+        }
 
-        // Activate "Delete Line" option when a line is selected
+        handleRefresh();
+
         listView.getSelectionModel().selectedItemProperty().addListener((observableValue, string, newValue) -> {
             deleteLineMenuItem.setDisable(newValue == null);
-
-            // For editing selected line
             if (newValue != null) {
                 textField.setText(newValue);
             }
         });
     }
 
+    private List<String> sendCommand(String command) {
+        List<String> response = new ArrayList<>();
+        System.out.println("Sending command: " + command); // Debug
+
+        try {
+            out.println(command);
+            System.out.println("Command sent: " + command); // Debug
+            String line;
+
+            while ((line = in.readLine()) != null) {
+                response.add(line);
+                if (line.equals("OK")) break;
+            }
+
+            System.out.println("Response from server: " + response); // Debug
+        } catch (IOException e) {
+            System.err.println("Communication error: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return response;
+    }
+
     @FXML
     private void handleAddLine() {
         int selectedIndex = listView.getSelectionModel().getSelectedIndex();
-        String newLine = "(New Line)";
-        if (selectedIndex == -1) {
-            listView.getItems().add("(New Line)");
-            sendRequest("ADDL " + listView.getItems().size() + " " + newLine);
-        } else {
-            // new line added below selected line
-            listView.getItems().add(selectedIndex+1, "(New Line)");
-            sendRequest("ADDL " + (selectedIndex + 1) + " " + newLine);
-        }
-        //TODO request server to add a new line
+        int insertIndex = selectedIndex == -1 ? listView.getItems().size() : selectedIndex + 1;
+        sendCommand("ADDL " + insertIndex + " (New Line)");
+        handleRefresh();
     }
 
     @FXML
     private void handleDeleteLine() {
         int selectedIndex = listView.getSelectionModel().getSelectedIndex();
         if (selectedIndex != -1) {
-            listView.getItems().remove(selectedIndex);
-            sendRequest("RMVL " + selectedIndex);
+            sendCommand("RMVL " + selectedIndex);
+            handleRefresh();
         }
-        // TODO request server to remove line
     }
 
     @FXML
     private void handleTextFieldUpdate() {
         int selectedIndex = listView.getSelectionModel().getSelectedIndex();
-        String newText = textField.getText();
         if (selectedIndex != -1) {
-            listView.getItems().set(selectedIndex, textField.getText());
-            listView.getItems().set(selectedIndex, newText);
-            sendRequest("MDFL " + selectedIndex + " " + newText);
+            String newText = textField.getText();
+            sendCommand("MDFL " + selectedIndex + " " + newText);
+            handleRefresh();
         }
-        // TODO request server to modify line
     }
 
     @FXML
-    private void  handleRefresh() {
-        // TODO request server last version of the document
-        /*String[] textSample = { "FIRST WITCH  When shall we three meet again?\n",
-                "   In thunder, lightning, or in rain?\n",
-                "SECOND WITCH  When the hurly-burly’s done\n",
-                "   When the battle’s lost and won.\n",
-                "THIRD WITCH  That will be ere the set of sun\n"};*/
+    private void handleRefresh() {
+        List<String> response = sendCommand("GETD");
         listView.getItems().clear();
-        /*for(String line : textSample){
-            listView.getItems().add(line);
-        }*/
-        try {
-            String line;
-            while ((line = in.readLine()) != null) {
-                if (line.equals("DONE")) break;
-                listView.getItems().add(line);
+        for (String line : response) {
+            if (line.startsWith("LINE")) {
+                String[] parts = line.split(" ", 3);
+                listView.getItems().add(parts[2]);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
-
-    private void sendRequest(String request) {
-        if (out != null) {
-            out.println(request);
-        }
-    }
-
 }
 
