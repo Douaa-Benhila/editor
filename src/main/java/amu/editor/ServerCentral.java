@@ -1,33 +1,137 @@
 package amu.editor;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ServerCentral {
-    private static final int port = 12345; // je definis mon port
-    private final List<String> document = new ArrayList<>();//mon document partagé je le modelise avec  liste
-    private final ReentrantLock lock = new ReentrantLock();//assurer que l'accès à la ressource partagée se fait de manière sécurisée
+    private static final int PORT = 12345;// je definis mon port
+    private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
+            "FIRST WITCH  When shall we three meet again?",
+            "   In thunder, lightning, or in rain?",
+            "SECOND WITCH  When the hurly-burly’s done",
+            "   When the battle’s lost and won.",
+            "THIRD WITCH  That will be ere the set of sun"
+    )));//mon document partagé je le modelise avec  liste
 
     public static void main(String[] args) {
-        new ServerCentral().startServer();
-    }
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Serveur démarré sur le port  " + PORT);
 
-    public void startServer() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Serveur démarré sur le port " + port);
-            while (true) { // // j'attend la connexion du client
-                Socket clientSocket = serverSocket.accept();//j'ai créer un serveur qui est capable d'accepter un client a n'importe quelle moment donnée
-                // chaque fois un client est connecté je crée pour lui son propre thread avec ClientHandler une classe que je vais créer ulterieurment
-                new ClientHandler(clientSocket).start();
+            while (true) { // j'attend la connexion du client
+                Socket clientSocket = serverSocket.accept(); //j'ai créer un serveur qui est capable d'accepter un client a n'importe quelle moment donnée
+                System.out.println("Nnouveau client cconnecté  " + clientSocket.getInetAddress());
+                new Thread(() -> handleClient(clientSocket)).start();
             }
         } catch (IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
+
+    private static void handleClient(Socket clientSocket) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+            String line;
+            while ((line = in.readLine()) != null) {
+                String[] tokens = line.split(" ", 3);
+                String command = tokens[0];
+                System.out.println(command);
+                switch (command) {
+                    case "GETD":
+                        handleGetDocument(out);
+                        break;
+                    case "MDFL":
+                        handleModifyLine(tokens, out);
+                        break;
+                    case "ADDL":
+                        handleAddLine(tokens, out);
+                        break;
+                    case "RMVL":
+                        handleRemoveLine(tokens, out);
+                        break;
+                    default:
+                        out.println("ERRL Unknown command: " + command);
+                        out.println("OK");
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Client disconnected.");
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid number format in command");
+        }
+    }
+
+    private static void handleGetDocument(PrintWriter out) {
+        synchronized (document) {
+            if (document.isEmpty()) {
+                out.println("OK");
+            } else {
+                for (int i = 0; i < document.size(); i++) {
+                    out.println("LINE " + i + " " + document.get(i));
+                }
+                out.println("OK");
+            }
+        }
+    }
+
+    private static void handleModifyLine(String[] tokens, PrintWriter out) {
+        if (tokens.length < 3) {
+            out.println("ERRL Invalid format");
+            out.println("OK");
+            return;
+        }
+        int mdfIndex = Integer.parseInt(tokens[1]);
+        String newText = tokens[2];
+        if (mdfIndex >= 0 && mdfIndex < document.size()) {
+            document.set(mdfIndex, newText);
+        } else {
+            out.println("ERRL " + mdfIndex + " Invalid index");
+        }
+        out.println("OK");
+    }
+
+    private static void handleAddLine(String[] tokens, PrintWriter out) {
+        if (tokens.length < 3) {
+            out.println("ERRL Invalid format");
+            out.println("OK");
+            return;
+        }
+        int addIndex = Integer.parseInt(tokens[1]);
+        String addText = tokens[2];
+        if (addIndex >= 0 && addIndex <= document.size()) {
+            document.add(addIndex, addText);
+        } else {
+            out.println("ERRL " + addIndex + " Invalid index");
+        }
+        out.println("OK");
+    }
+
+    private static void handleRemoveLine(String[] tokens, PrintWriter out) {
+        if (tokens.length < 2) {
+            out.println("ERRL Invalid format");
+            out.println("OK");
+            return;
+        }
+        int rmIndex = Integer.parseInt(tokens[1]);
+        if (rmIndex >= 0 && rmIndex < document.size()) {
+            document.remove(rmIndex);
+        } else {
+            out.println("ERRL " + rmIndex + " Invalid index");
+        }
+        out.println("OK");
+    }
 }
+
+
 
