@@ -24,8 +24,8 @@ public class ClientController {
     private static final int PORT = 12345;
 
     private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
+    private PrintWriter out; // pour envoyer les commandes
+    private BufferedReader in;// pour lire les reponses
 
     @FXML
     public void initialize() {
@@ -34,11 +34,11 @@ public class ClientController {
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (IOException e) {
-            System.err.println("Failed to connect to server in initialize: " + e.getMessage());
+            System.err.println("vous avez pas reussi la connexion au serveur  " + e.getMessage());
             e.printStackTrace();
         }
 
-        handleRefresh();
+        handleRefresh();//Récupère et affiche les lignes du serveur au démarrage
 
         listView.getSelectionModel().selectedItemProperty().addListener((observableValue, string, newValue) -> {
             deleteLineMenuItem.setDisable(newValue == null);
@@ -50,26 +50,29 @@ public class ClientController {
 
     private List<String> sendCommand(String command) {
         List<String> response = new ArrayList<>();
-        System.out.println("Sending command: " + command); // Debug
+        String line;
 
         try {
-            out.println(command);
-            System.out.println("Command sent: " + command); // Debug
-            String line;
-
+            out.println(command); // Envoie la commande
             while ((line = in.readLine()) != null) {
-                response.add(line);
-                if (line.equals("OK")) break;
-            }
+                response.add(line); // Ajoute chaque ligne à la réponse
+                if (line.equals("OK") || line.equals("DONE")) break; // Fin de réponse
+                if (line.startsWith("ERRL")) {
+                    System.err.println("Erreur du serveur : " + line);
+                    break;
+                }
 
-            System.out.println("Response from server: " + response); // Debug
+            }
         } catch (IOException e) {
-            System.err.println("Communication error: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Erreur de communication avec le serveur : " + e.getMessage());
+            e.printStackTrace(); // Affiche le détail de l’erreur
+            response.add("ERRL Erreur de lecture depuis le serveur.");
         }
 
         return response;
     }
+
+
 
     @FXML
     private void handleAddLine() {
@@ -105,9 +108,26 @@ public class ClientController {
         for (String line : response) {
             if (line.startsWith("LINE")) {
                 String[] parts = line.split(" ", 3);
-                listView.getItems().add(parts[2]);
+                if (parts.length >= 3) {
+                    listView.getItems().add(parts[2]);
+                }
             }
         }
     }
+
+    @FXML
+    private void handleGetLine() {
+        int selectedIndex = listView.getSelectionModel().getSelectedIndex();
+        if (selectedIndex != -1) {
+            List<String> response = sendCommand("GETL " + selectedIndex);
+            for (String line : response) {
+                if (line.startsWith("LINE")) {
+                    String[] parts = line.split(" ", 3);
+                    textField.setText(parts[2]); // Affiche juste la ligne dans le champ texte
+                }
+            }
+        }
+    }
+
 }
 
