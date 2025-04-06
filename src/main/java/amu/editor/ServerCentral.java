@@ -24,7 +24,7 @@ public class ServerCentral {
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Serveur démarré sur le port  " + PORT);
+            System.out.println("Serveur Central démarré sur le port  " + PORT);
 
             while (true) { // j'attend la connexion du client
                 Socket clientSocket = serverSocket.accept(); //j'ai créer un serveur qui est capable d'accepter un client a n'importe quelle moment donnée
@@ -37,6 +37,7 @@ public class ServerCentral {
         }
     }
 
+    //Gérer la communication avec un client
     private static void handleClient(Socket clientSocket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
@@ -59,35 +60,38 @@ public class ServerCentral {
                     case "RMVL":
                         handleRemoveLine(tokens, out);
                         break;
+                    case "GETL":
+                        handleGetLine(tokens, out);
+                        break;
                     default:
-                        out.println("ERRL Unknown command: " + command);
-                        out.println("OK");
+                        out.println("ERRL commande inconnue: " + command);
+                        out.println("DONE");
                         break;
                 }
             }
         } catch (IOException e) {
-            System.out.println("Client disconnected.");
+            System.out.println("Client est déconnecté .");
         } catch (NumberFormatException e) {
-            System.err.println("Invalid number format in command");
+            System.err.println("format de numero est invalide dans cette commande ");
         }
     }
 
     private static void handleGetDocument(PrintWriter out) {
         synchronized (document) {
             if (document.isEmpty()) {
-                out.println("OK");
+                out.println("DONE");
             } else {
                 for (int i = 0; i < document.size(); i++) {
                     out.println("LINE " + i + " " + document.get(i));
                 }
-                out.println("OK");
+                out.println("DONE");
             }
         }
     }
 
     private static void handleModifyLine(String[] tokens, PrintWriter out) {
         if (tokens.length < 3) {
-            out.println("ERRL Invalid format");
+            out.println("ERRL FORMAT INVALIDE ");
             out.println("OK");
             return;
         }
@@ -96,14 +100,14 @@ public class ServerCentral {
         if (mdfIndex >= 0 && mdfIndex < document.size()) {
             document.set(mdfIndex, newText);
         } else {
-            out.println("ERRL " + mdfIndex + " Invalid index");
+            out.println("ERRL " + mdfIndex + " INDEX INVALIDE");
         }
-        out.println("OK");
+        out.println("OK");// message de confirmation envoyé au client SAME AS DONE
     }
 
     private static void handleAddLine(String[] tokens, PrintWriter out) {
         if (tokens.length < 3) {
-            out.println("ERRL Invalid format");
+            out.println("ERRL FORMAT INVALIDE");
             out.println("OK");
             return;
         }
@@ -112,14 +116,14 @@ public class ServerCentral {
         if (addIndex >= 0 && addIndex <= document.size()) {
             document.add(addIndex, addText);
         } else {
-            out.println("ERRL " + addIndex + " Invalid index");
+            out.println("ERRL " + addIndex + " INDEX INVALIDE");
         }
         out.println("OK");
     }
 
     private static void handleRemoveLine(String[] tokens, PrintWriter out) {
         if (tokens.length < 2) {
-            out.println("ERRL Invalid format");
+            out.println("ERRL FORMAT INVALIDE ");
             out.println("OK");
             return;
         }
@@ -127,11 +131,30 @@ public class ServerCentral {
         if (rmIndex >= 0 && rmIndex < document.size()) {
             document.remove(rmIndex);
         } else {
-            out.println("ERRL " + rmIndex + " Invalid index");
+            out.println("ERRL " + rmIndex + " INDEX INVALIDE ");
         }
         out.println("OK");
     }
+    private static void handleGetLine(String[] tokens, PrintWriter out) {
+        if (tokens.length < 2) {
+            out.println("ERRL format invalide");
+            out.println("OK");
+            return;
+        }
+        try {
+            int index = Integer.parseInt(tokens[1]);
+            synchronized (document) {
+                if (index >= 0 && index < document.size()) {
+                    out.println("LINE " + index + " " + document.get(index));
+                } else {
+                    out.println("ERRL " + index + " Invalid index");
+                }
+            }
+        } catch (NumberFormatException e) {
+            out.println("ERRL Invalid number format");
+        }
+        out.println("OK");
+    }
+
 }
-
-
 
