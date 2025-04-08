@@ -21,6 +21,8 @@ public class ServerCentral {
             "   When the battle’s lost and won.",
             "THIRD WITCH  That will be ere the set of sun"
     )));//mon document partagé je le modelise avec  liste
+    private static final List<PrintWriter> clients = Collections.synchronizedList(new ArrayList<>());// liste des clients connectées ca va m'aider dans la federation entre serveurs
+
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -41,7 +43,7 @@ public class ServerCentral {
     private static void handleClient(Socket clientSocket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-
+             clients.add(out); // j'ajoute mes clients a la liste
             String line;
             while ((line = in.readLine()) != null) {
                 String[] tokens = line.split(" ", 3);
@@ -95,15 +97,23 @@ public class ServerCentral {
             out.println("OK");
             return;
         }
+
         int mdfIndex = Integer.parseInt(tokens[1]);
         String newText = tokens[2];
-        if (mdfIndex >= 0 && mdfIndex < document.size()) {
-            document.set(mdfIndex, newText);
-        } else {
-            out.println("ERRL " + mdfIndex + " INDEX INVALIDE");
+
+        synchronized (document) {
+            if (mdfIndex >= 0 && mdfIndex < document.size()) {
+                document.set(mdfIndex, newText);
+                System.out.println("[SERVER] Ligne modifiée à l'index " + mdfIndex + " : " + newText);
+
+                broadcastAll("LINE " + mdfIndex + " " + newText);
+            } else {
+                out.println("ERRL " + mdfIndex + " INDEX INVALIDE");
+            }
         }
-        out.println("OK");// message de confirmation envoyé au client SAME AS DONE
+        out.println("OK");
     }
+
 
     private static void handleAddLine(String[] tokens, PrintWriter out) {
         if (tokens.length < 3) {
@@ -111,15 +121,23 @@ public class ServerCentral {
             out.println("OK");
             return;
         }
+
         int addIndex = Integer.parseInt(tokens[1]);
         String addText = tokens[2];
-        if (addIndex >= 0 && addIndex <= document.size()) {
-            document.add(addIndex, addText);
-        } else {
-            out.println("ERRL " + addIndex + " INDEX INVALIDE");
+
+        synchronized (document) {
+            if (addIndex >= 0 && addIndex <= document.size()) {
+                document.add(addIndex, addText);
+                System.out.println("[SERVER] Ligne ajoutée à l'index " + addIndex + " : " + addText);
+
+                broadcastAll("ADDL " + addIndex + " " + addText);
+            } else {
+                out.println("ERRL " + addIndex + " INDEX INVALIDE");
+            }
         }
         out.println("OK");
     }
+
 
     private static void handleRemoveLine(String[] tokens, PrintWriter out) {
         if (tokens.length < 2) {
@@ -127,14 +145,22 @@ public class ServerCentral {
             out.println("OK");
             return;
         }
+
         int rmIndex = Integer.parseInt(tokens[1]);
-        if (rmIndex >= 0 && rmIndex < document.size()) {
-            document.remove(rmIndex);
-        } else {
-            out.println("ERRL " + rmIndex + " INDEX INVALIDE ");
+
+        synchronized (document) {
+            if (rmIndex >= 0 && rmIndex < document.size()) {
+                document.remove(rmIndex);
+                System.out.println("[SERVER] Ligne supprimée à l'index " + rmIndex);
+
+                broadcastAll("RMVL " + rmIndex); // ✅ propagation
+            } else {
+                out.println("ERRL " + rmIndex + " INDEX INVALIDE ");
+            }
         }
         out.println("OK");
     }
+
     private static void handleGetLine(String[] tokens, PrintWriter out) {
         if (tokens.length < 2) {
             out.println("ERRL format invalide");
@@ -155,6 +181,16 @@ public class ServerCentral {
         }
         out.println("OK");
     }
+
+    // methode qui envoie les changements a tous les clients
+    private static void broadcastAll(String msg) {
+        synchronized (clients) {
+            for (PrintWriter client : clients) {
+                client.println(msg);
+            }
+        }
+    }
+
 
 }
 
