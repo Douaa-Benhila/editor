@@ -25,12 +25,13 @@ public class ServerCentral {
 
 
     public static void main(String[] args) {
+
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Serveur Central démarré sur le port  " + PORT);
 
             while (true) { // j'attend la connexion du client
                 Socket clientSocket = serverSocket.accept(); //j'ai créer un serveur qui est capable d'accepter un client a n'importe quelle moment donnée
-                System.out.println("Nnouveau client cconnecté  " + clientSocket.getInetAddress());
+                System.out.println("Nouveau client connecté  " + clientSocket.getInetAddress());
                 new Thread(() -> handleClient(clientSocket)).start();
             }
         } catch (IOException e) {
@@ -44,6 +45,9 @@ public class ServerCentral {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
              clients.add(out); // j'ajoute mes clients a la liste
+
+
+
             String line;
             while ((line = in.readLine()) != null) {
                 String[] tokens = line.split(" ", 3);
@@ -153,7 +157,7 @@ public class ServerCentral {
                 document.remove(rmIndex);
                 System.out.println("[SERVER] Ligne supprimée à l'index " + rmIndex);
 
-                broadcastAll("RMVL " + rmIndex); // ✅ propagation
+                broadcastAll("RMVL " + rmIndex);
             } else {
                 out.println("ERRL " + rmIndex + " INDEX INVALIDE ");
             }
@@ -190,6 +194,7 @@ public class ServerCentral {
             }
         }
     }
+
 
 
 }

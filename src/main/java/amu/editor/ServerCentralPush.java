@@ -19,10 +19,11 @@ public class ServerCentralPush {
 
 
     private static final List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<>()); //Liste de tous les clients connectés
+    private static PrintWriter serverCentralOut; // Writer vers le serveur central
 
     public static void main(String[] args) {
         // methode pour federation connecte deux serveurs
-        connectToServer("localhost", 12345);
+        //connectToServer("localhost", 12345);
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Serveur PUSH démarré sur le port " + PORT);
 
@@ -44,6 +45,9 @@ public class ServerCentralPush {
         private final Socket socket;
         private PrintWriter out;
         private BufferedReader in;
+
+
+
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
@@ -117,6 +121,7 @@ public class ServerCentralPush {
 
                     // Notifie les autres clients
                     broadcastAll("LINE " + index + " " + newText);
+                    if (serverCentralOut != null) serverCentralOut.println("MDFL " + index + " " + newText);
                 } else {
                     out.println("ERRL Invalid index");
                 }
@@ -139,6 +144,7 @@ public class ServerCentralPush {
 
                     // Notifie les autres clients
                     broadcastAll("ADDL " + index + " " + newText);
+                    if (serverCentralOut != null) serverCentralOut.println("ADDL " + index + " " + newText);
                 } else {
                     out.println("ERRL Invalid index");
                 }
@@ -160,6 +166,7 @@ public class ServerCentralPush {
 
                     // Notifie les autres clients
                     broadcastAll( "RMVL " + index);
+                    if (serverCentralOut != null) serverCentralOut.println("RMVL " + index);
                 } else {
                     out.println("ERRL Invalid index");
                 }
@@ -178,15 +185,11 @@ public class ServerCentralPush {
     public static void connectToServer(String host, int port) {
         new Thread(() -> {
             try {
-                // Connexion à un autre serveur
                 Socket socket = new Socket(host, port);
-                System.out.println("onnexion au serveur central sur " + host + ":" + port);
-
+                System.out.println("Connexion au serveur central sur " + host + ":" + port);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-                // demande la version actuelle du document
-                out.println("GETD");
+                serverCentralOut = new PrintWriter(socket.getOutputStream(), true);
+                serverCentralOut.println("GETD");
 
                 String line;
                 while ((line = in.readLine()) != null && !line.equals("DONE")) {
@@ -194,82 +197,18 @@ public class ServerCentralPush {
                         String[] parts = line.split(" ", 3);
                         int index = Integer.parseInt(parts[1]);
                         String content = parts[2];
-
-                        // Met à jour le document local
                         synchronized (document) {
                             while (document.size() <= index) document.add("");
                             document.set(index, content);
                         }
-
-                        // Notifie les clients push
                         broadcastAll("LINE " + index + " " + content);
                     }
                 }
-
-                // Ensuite, écoute les mises à jour (ADDL, MDFL, RMVL)
-                while ((line = in.readLine()) != null) {
-                    handleServerUpdate(line);
-                }
-
             } catch (IOException e) {
                 System.err.println("Erreur de fédération : " + e.getMessage());
             }
-        }).start(); // Démarre un thread séparé
+        }).start();
     }
-    // Applique une mise à jour reçue depuis le serveur central
-    private static void handleServerUpdate(String line) {
-        String[] tokens = line.split(" ", 3);
-        String command = tokens[0];
-
-        synchronized (document) {
-            try {
-                switch (command) {
-                    case "ADDL":
-                        int addIndex = Integer.parseInt(tokens[1]);
-                        String addText = tokens[2];
-
-
-                        if (addIndex >= 0 && addIndex <= document.size()) {
-                            document.add(addIndex, addText);
-                            // Notifie tous les clients push
-                            broadcastAll("ADDL " + addIndex + " " + addText);
-                        }
-                        break;
-
-                    case "MDFL":
-                    case "LINE":
-                        int modIndex = Integer.parseInt(tokens[1]);
-                        String modText = tokens[2];
-
-                        // S'assure que la ligne existe
-                        while (document.size() <= modIndex) {
-                            document.add(""); // complète si ligne manquante
-                        }
-
-                        document.set(modIndex, modText);
-                        broadcastAll("LINE " + modIndex + " " + modText);
-                        break;
-
-                    case "RMVL":
-                        int rmIndex = Integer.parseInt(tokens[1]);
-
-
-                        if (rmIndex >= 0 && rmIndex < document.size()) {
-                            document.remove(rmIndex);
-                            broadcastAll("RMVL " + rmIndex);
-                        }
-                        break;
-
-                    default:
-                        System.err.println("Commande inconnue du serveur central : " + command);
-                }
-            } catch (Exception e) {
-                System.err.println("Erreur dans handleServerUpdate : " + e.getMessage());
-            }
-        }
-    }
-
-
 
 }
 
