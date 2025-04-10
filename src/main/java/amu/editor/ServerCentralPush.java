@@ -21,21 +21,33 @@ public class ServerCentralPush {
     private static final List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<>()); //Liste de tous les clients connectés
     private static PrintWriter serverCentralOut; // Writer vers le serveur central
 
+
     public static void main(String[] args) {
-        // methode pour federation connecte deux serveurs
+        // methode pour federation connecte deux serveurs tache 3 et 4
         //connectToServer("localhost", 12345);
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Serveur PUSH démarré sur le port " + PORT);
+        try {
+            // Étape 1 : Lecture du fichier peers.cfg pour savoir si je suis pair ou maître
+            PeerConfig config = PeerConfig.load("peers.cfg", PORT);
 
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("Nouveau client connecté : " + clientSocket.getInetAddress());
-
-                ClientHandler handler = new ClientHandler(clientSocket);
-                clients.add(handler);
-                new Thread(handler).start();
+            // Étape 2 : Si je suis un pair, je me connecte au maître
+            if (!config.isMaster()) {
+                connectToServer(config.getMasterHost(), config.getMasterPort());
             }
-        } catch (IOException e) {
+
+            try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+                System.out.println("Serveur PUSH démarré sur le port " + PORT);
+
+                while (true) {
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("Nouveau client connecté : " + clientSocket.getInetAddress());
+
+                    ClientHandler handler = new ClientHandler(clientSocket);
+                    clients.add(handler);
+                    new Thread(handler).start();
+                }
+            }
+        }catch (IOException e) {
+            System.err.println("Erreur au démarrage du serveur push : " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -75,7 +87,8 @@ public class ServerCentralPush {
 
                 String line;
                 while ((line = in.readLine()) != null) {
-                    String[] tokens = line.split(" ", 3);
+
+                    /*String[] tokens = line.split(" ", 3);
                     String command = tokens[0];
 
                     switch (command) {
@@ -90,6 +103,12 @@ public class ServerCentralPush {
                             break;
                         default:
                             out.println("ERRL Unknown command");
+                    }*/
+
+                    // tache 5
+                    if (serverCentralOut != null) {
+                        // En tant que pair, je transmets la commande au maître
+                        serverCentralOut.println(line);
                     }
                 }
 
@@ -182,7 +201,7 @@ public class ServerCentralPush {
         }
     }
     // Méthode pour connecter ServerCentralPush à u ServerCentral
-    public static void connectToServer(String host, int port) {
+    /*public static void connectToServer(String host, int port) {
         new Thread(() -> {
             try {
                 Socket socket = new Socket(host, port);
@@ -208,7 +227,58 @@ public class ServerCentralPush {
                 System.err.println("Erreur de fédération : " + e.getMessage());
             }
         }).start();
+    }*/
+
+    // tache 5
+    // Connexion au serveur maître pour écouter les mises à jour
+    public static void connectToServer(String host, int port) {
+        new Thread(() -> {
+            try {
+                Socket socket = new Socket(host, port);
+                System.out.println("Connexion au serveur central sur " + host + ":" + port);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                serverCentralOut = new PrintWriter(socket.getOutputStream(), true);
+                serverCentralOut.println("GETD"); // Demande initiale
+
+                String line;
+                while ((line = in.readLine()) != null) {
+                    if (line.startsWith("LINE")) {
+                        String[] parts = line.split(" ", 3);
+                        int index = Integer.parseInt(parts[1]);
+                        String content = parts[2];
+                        synchronized (document) {
+                            while (document.size() <= index) document.add("");
+                            document.set(index, content);
+                        }
+                        broadcastAll("LINE " + index + " " + content);
+                    } else if (line.startsWith("ADDL")) {
+                        String[] parts = line.split(" ", 3);
+                        int index = Integer.parseInt(parts[1]);
+                        String content = parts[2];
+                        synchronized (document) {
+                            document.add(index, content);
+                        }
+                        broadcastAll("ADDL " + index + " " + content);
+                    } else if (line.startsWith("RMVL")) {
+                        int index = Integer.parseInt(line.split(" ")[1]);
+                        synchronized (document) {
+                            if (index >= 0 && index < document.size()) {
+                                document.remove(index);
+                            }
+                        }
+                        broadcastAll("RMVL " + index);
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Erreur de fédération : " + e.getMessage());
+            }
+        }).start();
     }
+
+
+
+
+
 
 }
 
