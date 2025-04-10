@@ -6,7 +6,7 @@ import java.util.*;
 
 public class ServerCentralPush {
 
-    private static final int PORT = 12345;
+    private static final int PORT = 12346;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
@@ -19,8 +19,11 @@ public class ServerCentralPush {
 
 
     private static final List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<>()); //Liste de tous les clients connectés
+    private static PrintWriter serverCentralOut; // Writer vers le serveur central
 
     public static void main(String[] args) {
+        // methode pour federation connecte deux serveurs
+        //connectToServer("localhost", 12345);
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Serveur PUSH démarré sur le port " + PORT);
 
@@ -42,6 +45,9 @@ public class ServerCentralPush {
         private final Socket socket;
         private PrintWriter out;
         private BufferedReader in;
+
+
+
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
@@ -115,6 +121,7 @@ public class ServerCentralPush {
 
                     // Notifie les autres clients
                     broadcastAll("LINE " + index + " " + newText);
+                    if (serverCentralOut != null) serverCentralOut.println("MDFL " + index + " " + newText);
                 } else {
                     out.println("ERRL Invalid index");
                 }
@@ -137,6 +144,7 @@ public class ServerCentralPush {
 
                     // Notifie les autres clients
                     broadcastAll("ADDL " + index + " " + newText);
+                    if (serverCentralOut != null) serverCentralOut.println("ADDL " + index + " " + newText);
                 } else {
                     out.println("ERRL Invalid index");
                 }
@@ -158,6 +166,7 @@ public class ServerCentralPush {
 
                     // Notifie les autres clients
                     broadcastAll( "RMVL " + index);
+                    if (serverCentralOut != null) serverCentralOut.println("RMVL " + index);
                 } else {
                     out.println("ERRL Invalid index");
                 }
@@ -171,6 +180,34 @@ public class ServerCentralPush {
                 client.sendMessage(msg);
             }
         }
+    }
+    // Méthode pour connecter ServerCentralPush à u ServerCentral
+    public static void connectToServer(String host, int port) {
+        new Thread(() -> {
+            try {
+                Socket socket = new Socket(host, port);
+                System.out.println("Connexion au serveur central sur " + host + ":" + port);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                serverCentralOut = new PrintWriter(socket.getOutputStream(), true);
+                serverCentralOut.println("GETD");
+
+                String line;
+                while ((line = in.readLine()) != null && !line.equals("DONE")) {
+                    if (line.startsWith("LINE")) {
+                        String[] parts = line.split(" ", 3);
+                        int index = Integer.parseInt(parts[1]);
+                        String content = parts[2];
+                        synchronized (document) {
+                            while (document.size() <= index) document.add("");
+                            document.set(index, content);
+                        }
+                        broadcastAll("LINE " + index + " " + content);
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Erreur de fédération : " + e.getMessage());
+            }
+        }).start();
     }
 
 }

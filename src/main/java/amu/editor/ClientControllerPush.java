@@ -23,7 +23,7 @@ public class ClientControllerPush {
     private MenuItem deleteLineMenuItem;
 
     private static final String HOST = "localhost";
-    private static final int PORT = 12345;
+    private static final int PORT = 12346;
 
     private Socket socket;
     private PrintWriter out;
@@ -64,6 +64,8 @@ public class ClientControllerPush {
                     String[] parts = line.split(" ", 3);
                     int index = Integer.parseInt(parts[1]);
                     String content = parts[2];
+                    System.out.println("[CLIENT] Reçu LINE : index=" + index + ", content=" + content);
+
 
                     Platform.runLater(() -> {
                         if (index < listView.getItems().size()) {
@@ -76,6 +78,7 @@ public class ClientControllerPush {
                     String[] parts = line.split(" ", 3);
                     int index = Integer.parseInt(parts[1]);
                     String content = parts[2];
+                    System.out.println("[CLIENT] Reçu ADDL : ajout de \"" + content + "\" à l'index " + index);
 
                     Platform.runLater(() -> {
                         listView.getItems().add(index, content);
@@ -83,6 +86,7 @@ public class ClientControllerPush {
 
                 } else if (line.startsWith("RMVL")) {
                     int index = Integer.parseInt(line.split(" ")[1]);
+                    System.out.println("[CLIENT] Reçu RMVL : suppression de la ligne " + index);
                     Platform.runLater(() -> {
                         if (index < listView.getItems().size()) {
                             listView.getItems().remove(index);
@@ -97,6 +101,7 @@ public class ClientControllerPush {
 
     private void sendCommand(String command) {
         if (out != null) {
+            System.out.println("[CLIENT] Envoi de commande au serveur : " + command);
             out.println(command);
         }
     }
