@@ -6,10 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 
 public class ServerCentral {
@@ -49,6 +46,30 @@ public class ServerCentral {
                     }
                 }
             }
+
+            // tache 7 : mecanisme de 3 minutes
+            long startTime = System.currentTimeMillis();
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                int elapsed = 0;
+                @Override
+                public void run() {
+                    elapsed += 15;
+                    if (elapsed >= 180) {
+                        System.out.println("[DEFAILLANCE] Le maître s'arrête définitivement après 3 minutes.");
+                        System.exit(0);
+                    } else {
+                        System.out.println("[PAUSE] Le maître est en pause pendant 5 secondes...");
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("[REPRISE] Le maître reprend son activité.");
+                    }
+                }
+            }, 15000, 15000);
+
 
             // Étape 2 : Démarrage du serveur (écoute des clients)
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
