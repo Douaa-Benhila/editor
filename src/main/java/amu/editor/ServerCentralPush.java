@@ -90,7 +90,7 @@ public class ServerCentralPush {
 
                     /*String[] tokens = line.split(" ", 3);
                     String command = tokens[0];
-
+                    System.out.println(command);
                     switch (command) {
                         case "MDFL":
                             handleModify(tokens);
