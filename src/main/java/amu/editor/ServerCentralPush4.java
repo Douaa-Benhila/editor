@@ -4,9 +4,9 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class ServerCentralPush2 {
+public class ServerCentralPush4 {
 
-    private static final int PORT = 12348;
+    private static final int PORT = 12342;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
@@ -24,7 +24,7 @@ public class ServerCentralPush2 {
 
     public static void main(String[] args) {
         // methode pour federation connecte deux serveurs tache 3 et 4
-        connectToServer("localhost", 12345);
+        connectToServer("localhost", 12343);
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("Serveur PUSH démarré sur le port " + PORT);

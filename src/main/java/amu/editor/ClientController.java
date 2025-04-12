@@ -21,7 +21,7 @@ public class ClientController {
     private MenuItem deleteLineMenuItem;
 
     private static final String HOST = "localhost";
-    private static final int PORT = 12345;
+    private static final int PORT = 12343;
 
     private Socket socket;
     private PrintWriter out; // pour envoyer les commandes

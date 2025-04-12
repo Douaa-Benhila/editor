@@ -4,9 +4,9 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class ServerReplica1 {
+public class ServerReplica4 {
 
-    private static final int PORT = 12349;
+    private static final int PORT = 12341;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
@@ -23,7 +23,7 @@ public class ServerReplica1 {
 
     public static void main(String[] args) {
         // methode pour federation connecte deux serveurs tache 3 et 4
-         connectToServer("localhost", 12345);
+         connectToServer("localhost", 12343);
 
 
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
