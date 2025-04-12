@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 public class ClientDispatch{
 
-    private static final int NUM_CLIENTS = 6; // Nombre de clients à simuler
+    private static final int NUM_CLIENTS = 9; // Nombre de clients à simuler
     private static final String DISPATCH_HOST = "127.0.0.1"; // Adresse du serveur Dispatch
     private static final int DISPATCH_PORT = 13000; // Port du serveur Dispatch
 
@@ -59,4 +59,3 @@ public class ClientDispatch{
         }
     }
 }
-

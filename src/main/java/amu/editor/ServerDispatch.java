@@ -7,9 +7,9 @@ import java.util.*;
 public class ServerDispatch {
 
     private static final List<String> serverList = Arrays.asList(
-            "127.0.0.1:12345",
-            "127.0.0.1:12346",
-            "127.0.0.1:12347"
+            "127.0.0.1:11111",
+            "127.0.0.1:22222",
+            "127.0.0.1:33333"
     );
 
     private static int nextServerIndex = 0; // Index pour choisir le prochain serveur
