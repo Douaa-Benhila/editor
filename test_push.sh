@@ -1,19 +1,28 @@
 #!/bin/bash
 
+mkdir -p bin
 
-CLASSPATH="build/classes/java/main"
+# Compilation uniquement des fichiers nécessaires
+javac -d bin \
+src/main/java/amu/editor/ServerCentralPush1.java \
+src/main/java/amu/editor/ClientAuto1.java \
+src/main/java/amu/editor/ClientAuto2.java \
+src/main/java/amu/editor/ClientAuto3.java || exit 1
 
-# commande avec lequel je lance mon script
-xterm -hold -e "java -cp $CLASSPATH amu.editor.ServerCentralPush" &
-
-# j'attends que le serveur demare
+# Lancer le serveur en arrière-plan
+echo "Lancement du serveur..."
+java -cp bin amu.editor.ServerCentralPush1 &
+SERVER_PID=$!
 sleep 2
 
-# modification de mes clients
-xterm -hold -e "java -cp $CLASSPATH amu.editor.AutoClientPush Client1 \"ADDL 1 Ligne A\" \"MDFL 0 Modif A\"" &
-xterm -hold -e "java -cp $CLASSPATH amu.editor.AutoClientPush Client2 \"ADDL 2 Ligne B\" \"RMVL 3\"" &
-xterm -hold -e "java -cp $CLASSPATH amu.editor.AutoClientPush Client3 \"MDFL 1 Final B\"" &
+# Lancer les clients
+echo "Lancement des clients..."
+java -cp bin amu.editor.ClientAuto1 &
+java -cp bin amu.editor.ClientAuto2 &
+java -cp bin amu.editor.ClientAuto3 &
 
-# j'attends que tous les clients termines la modifications
-wait
+# Attendre que le serveur se termine (ctrl+C pour arrêter)
+wait $SERVER_PID
 
+
+#commande pour tester le script bash test_push.sh
