@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+// classe pour tache 2
 public class ServerCentralPush1 {
 
     private static final int PORT = 12346;
