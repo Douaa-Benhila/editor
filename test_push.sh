@@ -25,4 +25,4 @@ java -cp bin amu.editor.ClientAuto3 &
 wait $SERVER_PID
 
 
-#commande pour tester le script bash test_push.sh
+#commande pour tester le script: bash test_push.sh
