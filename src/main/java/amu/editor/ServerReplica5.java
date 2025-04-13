@@ -4,9 +4,9 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class ServerReplica {
+public class ServerReplica5 {
 
-    private static final int PORT = 12347;
+    private static final int PORT = 33333;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
@@ -23,7 +23,7 @@ public class ServerReplica {
 
     public static void main(String[] args) {
         // methode pour federation connecte deux serveurs tache 3 et 4
-        //connectToServer("localhost", 12345);
+        // connectToServer("localhost", 12345);
         try {
             // Étape 1 : Lecture du fichier peers.cfg pour savoir si je suis pair ou maître
             PeerConfig config = PeerConfig.load("peers.cfg", PORT);
@@ -34,17 +34,17 @@ public class ServerReplica {
             }
 
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Serveur Replica démarré sur le port " + PORT);
+                System.out.println("Serveur Replica démarré sur le port " + PORT);
 
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("Nouveau client connecté : " + clientSocket.getInetAddress());
+                while (true) {
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("Nouveau client connecté : " + clientSocket.getInetAddress());
 
-                ClientHandler handler = new ClientHandler(clientSocket);
-                clients.add(handler);
-                new Thread(handler).start();
-            }
-        } }catch (IOException e) {
+                    ClientHandler handler = new ClientHandler(clientSocket);
+                    clients.add(handler);
+                    new Thread(handler).start();
+                }
+            } }catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -84,9 +84,9 @@ public class ServerReplica {
 
                 String line;
                 while ((line = in.readLine()) != null) {
-                    /*String[] tokens = line.split(" ", 3);
+                    String[] tokens = line.split(" ", 3);
                     String command = tokens[0];
-
+                    System.out.println(command);
                     switch (command) {
                         case "MDFL":
                             handleModify(tokens);
@@ -99,7 +99,7 @@ public class ServerReplica {
                             break;
                         default:
                             out.println("ERRL Unknown command");
-                    }*/
+                    }
                     // tache 5
                     // tache 5
                     if (serverCentralOut != null) {
