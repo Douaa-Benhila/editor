@@ -1,3 +1,5 @@
+package amu.editor;
+
 import java.io.*;
 import java.net.Socket;
 
