@@ -5,7 +5,7 @@
 
 <VBox spacing="10" alignment="TOP_CENTER"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="amu.editor.ClientControllerPush">
+      fx:controller="amu.editor.ClientControllerReplica">
 
 <fx:define>
     <ContextMenu fx:id="listViewContextMenu">

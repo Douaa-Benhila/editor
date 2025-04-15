@@ -6,7 +6,7 @@ import java.util.*;
 
 public class ServerCentralPush5 {
 
-    private static final int PORT = 22222;
+    private static final int PORT = 19853;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(

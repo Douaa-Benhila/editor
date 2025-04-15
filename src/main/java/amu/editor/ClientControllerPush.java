@@ -23,7 +23,7 @@ public class ClientControllerPush {
     private MenuItem deleteLineMenuItem;
 
     private static final String HOST = "localhost";
-    private static final int PORT = 12346;
+    private static final int PORT = 19853;
 
     private Socket socket;
     private PrintWriter out;

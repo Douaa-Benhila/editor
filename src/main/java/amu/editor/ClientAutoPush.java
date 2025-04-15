@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class ClientAutoPush {
     public static void main(String[] args) throws Exception {
-        Socket socket = new Socket("localhost", 22222); // Connexion à ServerPush
+        Socket socket = new Socket("localhost", 12346); // Connexion à ServerPush
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 

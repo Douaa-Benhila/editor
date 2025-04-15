@@ -6,7 +6,7 @@ import java.util.*;
 
 public class ServerReplica5 {
 
-    private static final int PORT = 33333;
+    private static final int PORT = 25614;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
@@ -84,7 +84,7 @@ public class ServerReplica5 {
 
                 String line;
                 while ((line = in.readLine()) != null) {
-                    String[] tokens = line.split(" ", 3);
+                    /*String[] tokens = line.split(" ", 3);
                     String command = tokens[0];
                     System.out.println(command);
                     switch (command) {
@@ -99,7 +99,7 @@ public class ServerReplica5 {
                             break;
                         default:
                             out.println("ERRL Unknown command");
-                    }
+                    }*/
                     // tache 5
                     // tache 5
                     if (serverCentralOut != null) {

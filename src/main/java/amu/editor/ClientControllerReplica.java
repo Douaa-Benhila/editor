@@ -23,7 +23,7 @@ public class ClientControllerReplica {
     private MenuItem deleteLineMenuItem;
 
     private static final String HOST = "localhost";
-    private static final int PORT = 12346;
+    private static final int PORT = 25614;
 
     private Socket socket;
     private PrintWriter out;

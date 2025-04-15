@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class ClientAutoMaster {
     public static void main(String[] args) throws Exception {
-        Socket socket = new Socket("localhost", 11111); // Connexion à ServerCentral
+        Socket socket = new Socket("localhost", 12345); // Connexion à ServerCentral
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 

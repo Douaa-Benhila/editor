@@ -5,7 +5,7 @@ import java.net.*;
 import java.util.*;
 
 public class ServerCentral5 {
-    private static final int PORT = 11111;
+    private static final int PORT = 54321;
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
             "FIRST WITCH  When shall we three meet again?",
             "   In thunder, lightning, or in rain?",
@@ -36,14 +36,14 @@ public class ServerCentral5 {
             }
 
             // Arrêt automatique après 2 minutes
-            Timer timer = new Timer();
+           /* Timer timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     System.out.println("[INFO] ServeurCentral5 s'arrête après 2 minutes.");
                     System.exit(0);
                 }
-            }, 120000);
+            }, 120000);*/
 
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("Serveur Central démarré sur le port  " + PORT);
