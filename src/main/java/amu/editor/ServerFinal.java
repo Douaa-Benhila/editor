@@ -9,7 +9,7 @@ public class ServerFinal {
     private static final List<PrintWriter> clients = new ArrayList<>();
     private static final Set<String> applied = Collections.synchronizedSet(new HashSet<>());
 
-    private static int myPort = 33333;
+    private static int myPort = 11111;
     private static final int[] peerPorts = {33333, 22222, 11111};
 
     public static void main(String[] args) throws IOException {

@@ -21,7 +21,7 @@ public class ClientControllerFinal {
 
     @FXML
     public void initialize() {
-        connectToServer("localhost", 33333);
+        connectToServer("localhost", 11111);
 
         listView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             deleteLineMenuItem.setDisable(newVal == null);
