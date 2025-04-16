@@ -4,9 +4,9 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class ServerCentralPush {
+public class ServerCentralPush5 {
 
-    private static final int PORT = 12346;
+    private static final int PORT = 19853;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
@@ -33,6 +33,8 @@ public class ServerCentralPush {
             if (!config.isMaster()) {
                 connectToServer(config.getMasterHost(), config.getMasterPort());
             }
+
+
 
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("Serveur PUSH démarré sur le port " + PORT);
@@ -90,7 +92,7 @@ public class ServerCentralPush {
 
                     /*String[] tokens = line.split(" ", 3);
                     String command = tokens[0];
-                    System.out.println(command);
+
                     switch (command) {
                         case "MDFL":
                             handleModify(tokens);

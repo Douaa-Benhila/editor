@@ -10,7 +10,7 @@ import java.util.*;
 
 // serveur tache 1
 public class ServerCentral1 {
-    private static final int PORT = 12345;// je definis mon port
+    private static final int PORT = 54321;// je definis mon port
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
             "FIRST WITCH  When shall we three meet again?",
             "   In thunder, lightning, or in rain?",

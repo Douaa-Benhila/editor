@@ -6,7 +6,7 @@ import java.util.*;
 
 public class ServerReplica4 {
 
-    private static final int PORT = 12341;
+    private static final int PORT = 11111;
 
 
     private static final List<String> document = Collections.synchronizedList(new ArrayList<>(Arrays.asList(
